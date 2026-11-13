@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SNAKE: 3 NIVELES — Edición Arcade Neón</title>
+    <!-- Tailwind CSS para diseño responsivo y utilidades -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tipografías retro-futuristas de Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Orbitron:wght@600;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-dark: #060812;
+            --panel-bg: rgba(13, 18, 36, 0.88);
+            --neon-cyan: #00f3ff;
+            --neon-green: #00ff88;
+            --neon-pink: #ff2a6d;
+            --neon-purple: #b026ff;
+            --neon-gold: #ffd700;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(0, 243, 255, 0.12) 0%, transparent 55%),
+                radial-gradient(circle at 85% 90%, rgba(176, 38, 255, 0.10) 0%, transparent 50%),
+                linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 28px 28px, 28px 28px;
+            color: #f0f4ff;
+            font-family: 'Inter', sans-serif;
+            min-height: 100dvh;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .font-arcade {
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* Efectos de brillo neón */
+        .neon-text-cyan {
+            color: var(--neon-cyan);
+            text-shadow: 0 0 8px rgba(0, 243, 255, 0.7), 0 0 20px rgba(0, 243, 255, 0.4);
+        }
+
+        .neon-text-green {
+            color: var(--neon-green);
+            text-shadow: 0 0 8px rgba(0, 255, 136, 0.7), 0 0 20px rgba(0, 255, 136, 0.4);
+        }
+
+        .neon-text-pink {
+            color: var(--neon-pink);
+            text-shadow: 0 0 8px rgba(255, 42, 109, 0.7), 0 0 20px rgba(255, 42, 109, 0.4);
+        }
+
+        .neon-text-gold {
+            color: var(--neon-gold);
+            text-shadow: 0 0 8px rgba(255, 215, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.4);
+        }
+
+        .arcade-frame {
+            background: var(--panel-bg);
+            border: 1.5px solid rgba(0, 243, 255, 0.35);
+            box-shadow: 
+                0 0 25px rgba(0, 243, 255, 0.15),
+                inset 0 0 20px rgba(0, 243, 255, 0.05);
+            backdrop-filter: blur(10px);
+        }
+
+        .canvas-wrapper {
+            position: relative;
+            border: 2px solid var(--neon-cyan);
+            box-shadow: 
+                0 0 18px rgba(0, 243, 255, 0.45),
+                inset 0 0 15px rgba(0, 243, 255, 0.15);
+            border-radius: 14px;
+            overflow: hidden;
+            background: #080c1a;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            touch-action: none; /* Evita scroll al deslizar en móvil */
+        }
+
+        /* Botones estilo Arcade Neón */
+        .btn-arcade {
+            font-family: 'Orbitron', sans-serif;
+            letter-spacing: 0.06em;
+            transition: all 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-arcade:active {
+            transform: scale(0.96);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00f3ff 0%, #00b8ff 100%);
+            color: #050814;
+            font-weight: 800;
+            box-shadow: 0 0 16px rgba(0, 243, 255, 0.55);
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 0 26px rgba(0, 243, 255, 0.85);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: rgba(16, 24, 48, 0.9);
+            border: 1px solid rgba(0, 243, 255, 0.4);
+            color: #e0f7ff;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--neon-cyan);
+            background: rgba(0, 243, 255, 0.15);
+            box-shadow: 0 0 12px rgba(0, 243, 255, 0.35);
+        }
+
+        /* Botones D-Pad táctiles */
+        .dpad-btn {
+            background: linear-gradient(145deg, rgba(20, 30, 60, 0.95), rgba(10, 15, 32, 0.95));
+            border: 1.5px solid rgba(0, 243, 255, 0.45);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), inset 0 0 10px rgba(0, 243, 255, 0.1);
+            color: var(--neon-cyan);
+            transition: transform 0.08s ease, background 0.1s ease, box-shadow 0.1s ease;
+        }
+
+        .dpad-btn:active, .dpad-btn.pressed {
+            transform: scale(0.91);
+            background: rgba(0, 243, 255, 0.25);
+            border-color: #ffffff;
+            box-shadow: 0 0 18px rgba(0, 243, 255, 0.7);
+            color: #ffffff;
+        }
+
+        /* Animaciones de modales y barras */
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.82; transform: scale(1.02); }
+        }
+
+        .animate-pulse-glow {
+            animation: pulseGlow 2.4s infinite ease-in-out;
+        }
+
+        @keyframes fadeInScale {
+            from { opacity: 0; transform: scale(0.94); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-enter {
+            animation: fadeInScale 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Scanlines sutiles sobre el canvas para toque retro */
+        .scanlines::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                rgba(18, 16, 16, 0) 50%, 
+                rgba(0, 0, 0, 0.18) 50%
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 5;
+        }
+    </style>
+</head>
+<body class="p-2 sm:p-4">
+
+    <!-- Contenedor Principal Centrado -->
+    <main class="w-full max-w-lg mx-auto flex flex-col gap-3">
+        
+        <!-- Encabezado y HUD Superior -->
+        <header class="arcade-frame rounded-2xl p-3 sm:p-4 flex flex-col gap-2.5">
+            <!-- Fila Superior: Título compacto y botones de utilidad -->
+            <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                    <span class="inline-block w-2.5 h-2.5 rounded-full bg-[#00ff88] shadow-[0_0_10px_#00ff88]"></span>
+                    <h1 class="font-arcade text-sm sm:text-base font-extrabold tracking-wider neon-text-cyan">
+                        SNAKE <span class="text-white/90">3 NIVELES</span>
+                    </h1>
+                </div>
+
+                <!-- Controles de Audio, Pausa y Reinicio -->
+                <div class="flex items-center gap-1.5 sm:gap-2">
+                    <button id="btn-sound" title="Silenciar / Activar sonido" aria-label="Alternar sonido"
+                        class="btn-secondary p-2 rounded-xl flex items-center justify-center">
+                        <!-- Icono Sonido Activo -->
+                        <svg id="icon-sound-on" class="w-4 h-4 sm:w-5 sm:h-5 text-[#00f3ff]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5L6 9H2v6h4l5 4V5zM15.54 8.46a5 5 0 010 7.07M19.07 4.93a10 10 0 010 14.14"/>
+                        </svg>
+                        <!-- Icono Sonido Silenciado -->
+                        <svg id="icon-sound-off" class="w-4 h-4 sm:w-5 sm:h-5 text-[#ff2a6d] hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5L6 9H2v6h4l5 4V5zM23 9l-6 6M17 9l6 6"/>
+                        </svg>
+                    </button>
+
+                    <button id="btn-pause" title="Pausar / Reanudar (P o Espacio)" aria-label="Pausar juego" disabled
+                        class="btn-secondary p-2 rounded-xl flex items-center justify-center disabled:opacity-40 disabled:pointer-events-none">
+                        <svg id="icon-pause" class="w-4 h-4 sm:w-5 sm:h-5 text-[#00f3ff]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <svg id="icon-play" class="w-4 h-4 sm:w-5 sm:h-5 text-[#00ff88] hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </button>
+
+                    <button id="btn-restart-hud" title="Reiniciar partida" aria-label="Reiniciar partida" disabled
+                        class="btn-secondary p-2 rounded-xl flex items-center justify-center disabled:opacity-40 disabled:pointer-events-none">
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5 text-[#ffd700]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Panel de Métricas (HUD) -->
+            <div class="grid grid-cols-4 gap-1.5 sm:gap-2 text-center">
+                <!-- Nivel -->
+                <div class="bg-[#080d1f]/90 border border-cyan-500/25 rounded-xl py-1.5 px-1">
+                    <div class="text-[10px] sm:text-xs uppercase tracking-wider text-slate-400">Nivel</div>
+                    <div id="hud-level" class="font-arcade text-sm sm:text-base font-bold neon-text-cyan">1/3</div>
+                </div>
+                <!-- Puntuación -->
+                <div class="bg-[#080d1f]/90 border border-emerald-500/25 rounded-xl py-1.5 px-1">
+                    <div class="text-[10px] sm:text-xs uppercase tracking-wider text-slate-400">Puntos</div>
+                    <div id="hud-score" class="font-arcade text-sm sm:text-base font-bold neon-text-green">0</div>
+                </div>
+                <!-- Progreso de Manzanas -->
+                <div class="bg-[#080d1f]/90 border border-pink-500/25 rounded-xl py-1.5 px-1">
+                    <div class="text-[10px] sm:text-xs uppercase tracking-wider text-slate-400">Meta</div>
+                    <div id="hud-apples" class="font-arcade text-sm sm:text-base font-bold neon-text-pink">0/6</div>
+                </div>
+                <!-- Récord -->
+                <div class="bg-[#080d1f]/90 border border-amber-500/25 rounded-xl py-1.5 px-1">
+                    <div class="text-[10px] sm:text-xs uppercase tracking-wider text-slate-400">Récord</div>
+                    <div id="hud-highscore" class="font-arcade text-sm sm:text-base font-bold neon-text-gold">0</div>
+                </div>
+            </div>
+
+            <!-- Barra de progreso visual del nivel + Indicador de Manzana Dorada -->
+            <div class="flex items-center gap-2">
+                <div class="flex-1 h-2 bg-slate-900 rounded-full overflow-hidden border border-cyan-500/20">
+                    <div id="level-progress-bar" class="h-full bg-gradient-to-r from-[#00f3ff] via-[#00ff88] to-[#ffd700] transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <span id="hud-level-name" class="text-[11px] font-semibold text-cyan-300 whitespace-nowrap">Clásico</span>
+            </div>
+        </header>
+
+        <!-- Área del Tablero de Juego y Pantallas Superpuestas (Modales) -->
+        <section id="board-container" class="canvas-wrapper scanlines w-full aspect-square max-h-[58dvh] sm:max-h-[520px] mx-auto">
+            <canvas id="game-canvas"></canvas>
+
+            <!-- 1. PANTALLA DE INICIO -->
+            <div id="screen-start" class="modal-enter absolute inset-0 z-20 bg-[#060916]/95 backdrop-blur-md flex flex-col justify-between p-4 sm:p-6 overflow-y-auto">
+                <div class="text-center space-y-1.5 mt-1">
+                    <div class="inline-block px-3 py-0.5 rounded-full text-[11px] font-arcade tracking-widest bg-cyan-500/15 text-cyan-300 border border-cyan-400/30">
+                        EDICIÓN ARCADE NEÓN
+                    </div>
+                    <h2 class="font-arcade text-2xl sm:text-3xl font-black tracking-wide neon-text-cyan animate-pulse-glow">
+                        SNAKE: 3 NIVELES
+                    </h2>
+                    <p class="text-xs sm:text-sm text-slate-300">
+                        Supera los 3 desafíos sin chocar contra los muros, obstáculos ni tu propia cola.
+                    </p>
+                </div>
+
+                <!-- Tarjetas explicativas de los 3 niveles -->
+                <div class="space-y-2 my-2">
+                    <div class="bg-[#0d142b]/90 border border-emerald-400/30 rounded-xl p-2.5 flex items-start gap-2.5">
+                        <span class="font-arcade text-xs font-bold px-2 py-1 rounded-lg bg-emerald-500/20 text-[#00ff88] border border-emerald-400/40">NV 1</span>
+                        <div class="text-xs">
+                            <div class="font-bold text-[#00ff88]">Clásico • Meta: 6 manzanas</div>
+                            <div class="text-slate-300">Velocidad moderada y tablero despejado para calentar motores.</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-[#0d142b]/90 border border-cyan-400/30 rounded-xl p-2.5 flex items-start gap-2.5">
+                        <span class="font-arcade text-xs font-bold px-2 py-1 rounded-lg bg-cyan-500/20 text-[#00f3ff] border border-cyan-400/40">NV 2</span>
+                        <div class="text-xs">
+                            <div class="font-bold text-[#00f3ff]">Obstáculos • Meta: 8 manzanas</div>
+                            <div class="text-slate-300">Velocidad media-alta con barreras fijas de energía dentro del tablero.</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-[#0d142b]/90 border border-amber-400/30 rounded-xl p-2.5 flex items-start gap-2.5">
+                        <span class="font-arcade text-xs font-bold px-2 py-1 rounded-lg bg-amber-500/20 text-[#ffd700] border border-amber-400/40">NV 3</span>
+                        <div class="text-xs">
+                            <div class="font-bold text-[#ffd700]">Desafío Final • Meta: 10 manzanas</div>
+                            <div class="text-slate-300">Velocidad rápida, laberinto exigente y <span class="text-[#ffd700] font-semibold">Manzanas Doradas (+50 pts)</span>.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Récord y Botón Jugar -->
+                <div class="space-y-2.5 text-center mb-1">
+                    <div class="text-xs sm:text-sm text-slate-300">
+                        Récord máximo guardado: <span id="start-highscore" class="font-arcade font-bold neon-text-gold">0</span> pts
+                    </div>
+                    <button id="btn-start-game" class="btn-arcade btn-primary w-full py-3 sm:py-3.5 rounded-xl text-base sm:text-lg uppercase tracking-wider cursor-pointer">
+                        ▶ JUGAR AHORA
+                    </button>
+                    <p class="text-[11px] text-slate-400">
+                        Usa <span class="text-cyan-300 font-semibold">Flechas / WASD</span>, desliza en pantalla o usa los botones táctiles.
+                    </p>
+                </div>
+            </div>
+
+            <!-- 2. PANTALLA DE PAUSA -->
+            <div id="screen-pause" class="hidden modal-enter absolute inset-0 z-20 bg-[#060916]/88 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center gap-4">
+                <div class="w-14 h-14 rounded-2xl bg-cyan-500/15 border border-cyan-400/40 flex items-center justify-center">
+                    <svg class="w-8 h-8 text-[#00f3ff]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10 9v6m4-6v6"/>
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="font-arcade text-2xl font-bold neon-text-cyan">JUEGO EN PAUSA</h2>
+                    <p class="text-xs sm:text-sm text-slate-300 mt-1">Tómate un respiro. Tu progreso está a salvo.</p>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-2.5 w-full max-w-xs mt-2">
+                    <button id="btn-resume" class="btn-arcade btn-primary flex-1 py-2.5 px-4 rounded-xl text-sm cursor-pointer">
+                        CONTINUAR
+                    </button>
+                    <button id="btn-restart-pause" class="btn-arcade btn-secondary flex-1 py-2.5 px-4 rounded-xl text-sm cursor-pointer">
+                        REINICIAR
+                    </button>
+                </div>
+            </div>
+
+            <!-- 3. PANTALLA DE TRANSICIÓN ENTRE NIVELES -->
+            <div id="screen-level-up" class="hidden modal-enter absolute inset-0 z-20 bg-[#060916]/94 backdrop-blur-md flex flex-col items-center justify-center p-5 text-center gap-3.5">
+                <div class="px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-[#00ff88] font-arcade text-xs font-bold">
+                    ¡NIVEL COMPLETADO!
+                </div>
+                <h2 id="levelup-title" class="font-arcade text-xl sm:text-2xl font-black neon-text-green">
+                    NIVEL 1 SUPERADO
+                </h2>
+                <div class="bg-[#0d142b] border border-cyan-500/30 rounded-xl p-3.5 w-full max-w-xs space-y-1.5">
+                    <div class="flex justify-between text-xs sm:text-sm">
+                        <span class="text-slate-400">Puntuación acumulada:</span>
+                        <span id="levelup-score" class="font-arcade font-bold neon-text-green">0</span>
+                    </div>
+                    <div class="flex justify-between text-xs sm:text-sm">
+                        <span class="text-slate-400">Siguiente desafío:</span>
+                        <span id="levelup-next-name" class="font-bold text-cyan-300">Nivel 2: Obstáculos</span>
+                    </div>
+                </div>
+                <p id="levelup-tip" class="text-xs text-slate-300 max-w-xs">
+                    Prepárate: aparecerán bloques de obstáculos en el tablero y aumentará la velocidad.
+                </p>
+                <button id="btn-next-level" class="btn-arcade btn-primary w-full max-w-xs py-3 rounded-xl text-sm sm:text-base cursor-pointer mt-1">
+                    INICIAR NIVEL 2 (<span id="levelup-countdown">4</span>s)
+                </button>
+            </div>
+
+            <!-- 4. PANTALLA DE GAME OVER -->
+            <div id="screen-gameover" class="hidden modal-enter absolute inset-0 z-20 bg-[#060916]/94 backdrop-blur-md flex flex-col items-center justify-center p-5 text-center gap-3.5">
+                <div class="px-3 py-1 rounded-full bg-pink-500/20 border border-pink-400/40 text-[#ff2a6d] font-arcade text-xs font-bold">
+                    FIN DE LA PARTIDA
+                </div>
+                <h2 class="font-arcade text-2xl sm:text-3xl font-black neon-text-pink">
+                    GAME OVER
+                </h2>
+                <p id="gameover-reason" class="text-xs sm:text-sm text-slate-300">
+                    ¡Chocaste contra un obstáculo!
+                </p>
+
+                <div class="bg-[#0d142b] border border-pink-500/30 rounded-xl p-3.5 w-full max-w-xs space-y-2">
+                    <div class="flex justify-between text-xs sm:text-sm">
+                        <span class="text-slate-400">Nivel alcanzado:</span>
+                        <span id="gameover-level" class="font-arcade font-bold text-cyan-300">1 / 3</span>
+                    </div>
+                    <div class="flex justify-between text-xs sm:text-sm">
+                        <span class="text-slate-400">Puntuación final:</span>
+                        <span id="gameover-score" class="font-arcade font-bold neon-text-green">0</span>
+                    </div>
+                    <div class="flex justify-between text-xs sm:text-sm border-t border-slate-800 pt-1.5">
+                        <span class="text-slate-400">Récord máximo:</span>
+                        <span id="gameover-highscore" class="font-arcade font-bold neon-text-gold">0</span>
+                    </div>
+                    <div id="gameover-new-record" class="hidden text-xs font-arcade font-bold text-[#ffd700] animate-pulse">
+                        ★ ¡NUEVO RÉCORD PERSONAL! ★
+                    </div>
+                </div>
+
+                <button id="btn-retry" class="btn-arcade btn-primary w-full max-w-xs py-3 rounded-xl text-sm sm:text-base cursor-pointer mt-1">
+                    ↻ VOLVER A INTENTARLO
+                </button>
+            </div>
+
+            <!-- 5. PANTALLA DE VICTORIA (COMPLETÓ LOS 3 NIVELES) -->
+            <div id="screen-victory" class="hidden modal-enter absolute inset-0 z-20 bg-[#060916]/94 backdrop-blur-md flex flex-col items-center justify-center p-5 text-center gap-3.5">
+                <div class="px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/50 text-[#ffd700] font-arcade text-xs font-bold">
+                    🏆 ¡MAESTRO ARCADE! 🏆
+                </div>
+                <h2 class="font-arcade text-2xl sm:text-3xl font-black neon-text-gold animate-pulse-glow">
+                    ¡VICTORIA TOTAL!
+                </h2>
+                <p class="text-xs sm:text-sm text-slate-200 max-w-xs">
+                    Has conquistado los 3 niveles de Snake y dominado el desafío final.
+                </p>
+
+                <div class="bg-[#0d142b] border border-amber-400/40 rounded-xl p-4 w-full max-w-xs space-y-2 shadow-[0_0_20px_rgba(255,215,0,0.15)]">
+                    <div class="flex justify-between text-xs sm:text-sm">
+                        <span class="text-slate-400">Niveles superados:</span>
+                        <span class="font-arcade font-bold text-[#00ff88]">3 / 3</span>
+                    </div>
+                    <div class="flex justify-between text-sm sm:text-base">
+                        <span class="text-slate-300 font-semibold">Puntuación Final:</span>
+                        <span id="victory-score" class="font-arcade font-black neon-text-gold">0</span>
+                    </div>
+                    <div class="flex justify-between text-xs sm:text-sm border-t border-slate-800 pt-1.5">
+                        <span class="text-slate-400">Récord máximo:</span>
+                        <span id="victory-highscore" class="font-arcade font-bold text-cyan-300">0</span>
+                    </div>
+                    <div id="victory-new-record" class="hidden text-xs font-arcade font-bold text-[#00ff88] animate-pulse">
+                        ★ ¡NUEVO RÉCORD HISTÓRICO! ★
+                    </div>
+                </div>
+
+                <button id="btn-play-again" class="btn-arcade btn-primary w-full max-w-xs py-3 rounded-xl text-sm sm:text-base cursor-pointer mt-1">
+                    ▶ VOLVER A JUGAR
+                </button>
+            </div>
+        </section>
+
+        <!-- Controles Táctiles (D-Pad) fuera del canvas para móviles y pantallas táctiles -->
+        <footer class="flex flex-col items-center justify-center pt-1 pb-2">
+            <div class="grid grid-cols-3 gap-2 w-44 sm:w-48" aria-label="Controles direccionales">
+                <div></div>
+                <button id="dpad-up" data-dir="UP" aria-label="Mover arriba"
+                    class="dpad-btn h-12 sm:h-13 rounded-2xl flex items-center justify-center cursor-pointer">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/>
+                    </svg>
+                </button>
+                <div></div>
+
+                <button id="dpad-left" data-dir="LEFT" aria-label="Mover izquierda"
+                    class="dpad-btn h-12 sm:h-13 rounded-2xl flex items-center justify-center cursor-pointer">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </button>
+
+                <button id="dpad-down" data-dir="DOWN" aria-label="Mover abajo"
+                    class="dpad-btn h-12 sm:h-13 rounded-2xl flex items-center justify-center cursor-pointer">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+
+                <button id="dpad-right" data-dir="RIGHT" aria-label="Mover derecha"
+                    class="dpad-btn h-12 sm:h-13 rounded-2xl flex items-center justify-center cursor-pointer">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </button>
+            </div>
+        </footer>
+    </main>
+
+    <script>
+        /**
+         * ============================================================================
+         * SNAKE: 3 NIVELES — MOTOR DEL JUEGO, AUDIO SINTETIZADO Y RENDERIZADO NEÓN
+         * ============================================================================
+         */
+        (() => {
+            'use strict';
+
+            /* ------------------------------------------------------------------------
+               1. SINTETIZADOR DE AUDIO RETRO (WEB AUDIO API)
+               Genera efectos de sonido sin archivos externos y permite silenciar.
+            ------------------------------------------------------------------------ */
+            class RetroAudio {
+                constructor() {
+                    this.ctx = null;
+                    this.muted = false;
+                }
+
+                init() {
+                    if (!this.ctx) {
+                        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                        if (AudioCtx) {
+                            this.ctx = new AudioCtx();
+                        }
+                    }
+                    if (this.ctx && this.ctx.state === 'suspended') {
+                        this.ctx.resume();
+                    }
+                }
+
+                toggleMute() {
+                    this.muted = !this.muted;
+                    return this.muted;
+                }
+
+                playTone(freq, duration, type = 'sine', volume = 0.12, delay = 0) {
+                    if (this.muted) return;
+                    try {
+                        this.init();
+                        if (!this.ctx) return;
+
+                        const now = this.ctx.currentTime + delay;
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+
+                        osc.type = type;
+                        osc.frequency.setValueAtTime(freq, now);
+
+                        gain.gain.setValueAtTime(volume, now);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+
+                        osc.start(now);
+                        osc.stop(now + duration);
+                    } catch (e) {
+                        // Ignorar errores si el navegador bloquea el audio antes de interacción
+                    }
+                }
+
+                playEat() {
+                    this.playTone(523.25, 0.08, 'triangle', 0.14, 0);     // C5
+                    this.playTone(783.99, 0.12, 'triangle', 0.14, 0.06);  // G5
+                }
+
+                playGoldenEat() {
+                    this.playTone(587.33, 0.08, 'sine', 0.16, 0);         // D5
+                    this.playTone(880.00, 0.09, 'sine', 0.16, 0.07);      // A5
+                    this.playTone(1174.66, 0.18, 'triangle', 0.18, 0.14); // D6
+                }
+
+                playLevelUp() {
+                    const notes = [440, 554.37, 659.25, 880];
+                    notes.forEach((n, idx) => {
+                        this.playTone(n, 0.14, 'square', 0.09, idx * 0.09);
+                    });
+                }
+
+                playVictory() {
+                    const melody = [523.25, 659.25, 783.99, 1046.50, 783.99, 1046.50];
+                    const times = [0, 0.1, 0.2, 0.32, 0.48, 0.6];
+                    melody.forEach((n, idx) => {
+                        this.playTone(n, 0.18, 'triangle', 0.15, times[idx]);
+                    });
+                }
+
+                playGameOver() {
+                    const notes = [330, 293.66, 246.94, 185];
+                    notes.forEach((n, idx) => {
+                        this.playTone(n, 0.18, 'sawtooth', 0.1, idx * 0.12);
+                    });
+                }
+
+                playClick() {
+                    this.playTone(660, 0.05, 'sine', 0.08, 0);
+                }
+            }
+
+            const audio = new RetroAudio();
+
+            /* ------------------------------------------------------------------------
+               2. CONFIGURACIÓN DE LOS 3 NIVELES Y CONSTANTES DEL TABLERO
+            ------------------------------------------------------------------------ */
+            const GRID_SIZE = 20; // Tablero de 20x20 celdas
+            const STORAGE_KEY = 'snake_3_niveles_highscore_v1';
+
+            // Definición de obstáculos seguros que dejan rutas amplias y el centro despejado
+            const LEVEL_CONFIGS = {
+                1: {
+                    number: 1,
+                    name: 'Clásico',
+                    speedMs: 138,
+                    targetApples: 6,
+                    applePoints: 10,
+                    hasGoldenApple: false,
+                    tip: 'Prepárate para el Nivel 2: aparecerán barreras fijas en el tablero y subirá la velocidad.',
+                    obstacles: [] // Tablero completamente despejado
+                },
+                2: {
+                    number: 2,
+                    name: 'Obstáculos',
+                    speedMs: 106,
+                    targetApples: 8,
+                    applePoints: 15,
+                    hasGoldenApple: false,
+                    tip: '¡Último reto! En el Nivel 3 la velocidad será máxima, habrá más muros y aparecerán Manzanas Doradas.',
+                    obstacles: [
+                        // 4 bloques simétricos en las esquinas interiores (dejan pasillos de 3 celdas en bordes y centro libre)
+                        { x: 4, y: 4 }, { x: 5, y: 4 }, { x: 4, y: 5 },
+                        { x: 15, y: 4 }, { x: 14, y: 4 }, { x: 15, y: 5 },
+                        { x: 4, y: 15 }, { x: 5, y: 15 }, { x: 4, y: 14 },
+                        { x: 15, y: 15 }, { x: 14, y: 15 }, { x: 15, y: 14 }
+                    ]
+                },
+                3: {
+                    number: 3,
+                    name: 'Desafío Final',
+                    speedMs: 82,
+                    targetApples: 10,
+                    applePoints: 20,
+                    hasGoldenApple: true,
+                    tip: '¡Eres una leyenda del arcade!',
+                    obstacles: [
+                        // Barreras superiores e inferiores horizontales con apertura central
+                        { x: 5, y: 3 }, { x: 6, y: 3 }, { x: 7, y: 3 },
+                        { x: 12, y: 3 }, { x: 13, y: 3 }, { x: 14, y: 3 },
+                        { x: 5, y: 16 }, { x: 6, y: 16 }, { x: 7, y: 16 },
+                        { x: 12, y: 16 }, { x: 13, y: 16 }, { x: 14, y: 16 },
+                        // Pilares laterales verticales (dejan fila y=9, y=10 libre para la serpiente inicial)
+                        { x: 3, y: 6 }, { x: 3, y: 7 },
+                        { x: 3, y: 12 }, { x: 3, y: 13 },
+                        { x: 16, y: 6 }, { x: 16, y: 7 },
+                        { x: 16, y: 12 }, { x: 16, y: 13 },
+                        // Dos nodos centrales separados para exigir reflejos
+                        { x: 9, y: 6 }, { x: 10, y: 6 },
+                        { x: 9, y: 13 }, { x: 10, y: 13 }
+                    ]
+                }
+            };
+
+            /* ------------------------------------------------------------------------
+               3. REFERENCIAS AL DOM
+            ------------------------------------------------------------------------ */
+            const canvas = document.getElementById('game-canvas');
+            const ctx = canvas.getContext('2d');
+            const boardContainer = document.getElementById('board-container');
+
+            // HUD
+            const hudLevel = document.getElementById('hud-level');
+            const hudScore = document.getElementById('hud-score');
+            const hudApples = document.getElementById('hud-apples');
+            const hudHighscore = document.getElementById('hud-highscore');
+            const hudLevelName = document.getElementById('hud-level-name');
+            const levelProgressBar = document.getElementById('level-progress-bar');
+
+            // Pantallas / Modales
+            const screenStart = document.getElementById('screen-start');
+            const screenPause = document.getElementById('screen-pause');
+            const screenLevelUp = document.getElementById('screen-level-up');
+            const screenGameOver = document.getElementById('screen-gameover');
+            const screenVictory = document.getElementById('screen-victory');
+
+            // Botones
+            const btnSound = document.getElementById('btn-sound');
+            const iconSoundOn = document.getElementById('icon-sound-on');
+            const iconSoundOff = document.getElementById('icon-sound-off');
+            const btnPause = document.getElementById('btn-pause');
+            const iconPause = document.getElementById('icon-pause');
+            const iconPlay = document.getElementById('icon-play');
+            const btnRestartHud = document.getElementById('btn-restart-hud');
+
+            const btnStartGame = document.getElementById('btn-start-game');
+            const btnResume = document.getElementById('btn-resume');
+            const btnRestartPause = document.getElementById('btn-restart-pause');
+            const btnNextLevel = document.getElementById('btn-next-level');
+            const btnRetry = document.getElementById('btn-retry');
+            const btnPlayAgain = document.getElementById('btn-play-again');
+
+            /* ------------------------------------------------------------------------
+               4. ESTADO GLOBAL DEL JUEGO
+            ------------------------------------------------------------------------ */
+            let state = {
+                status: 'START', // 'START' | 'PLAYING' | 'PAUSED' | 'LEVEL_UP' | 'GAME_OVER' | 'VICTORY'
+                level: 1,
+                score: 0,
+                highScore: 0,
+                applesEatenInLevel: 0,
+                snake: [],
+                direction: { x: 1, y: 0 },
+                directionQueue: [],
+                apple: { x: 14, y: 10 },
+                goldenApple: null, // { x, y, expiresAt, duration }
+                goldenSpawnTimer: 0,
+                particles: [],
+                lastTickTime: 0,
+                animationFrameId: null,
+                countdownInterval: null
+            };
+
+            // Cargar récord desde localStorage
+            function loadHighScore() {
+                try {
+                    const saved = localStorage.getItem(STORAGE_KEY);
+                    state.highScore = saved ? parseInt(saved, 10) || 0 : 0;
+                } catch (e) {
+                    state.highScore = 0;
+                }
+                updateHighScoreDisplays();
+            }
+
+            function saveHighScore(newScore) {
+                if (newScore > state.highScore) {
+                    state.highScore = newScore;
+                    try {
+                        localStorage.setItem(STORAGE_KEY, String(state.highScore));
+                    } catch (e) {
+                        // Ignorar si el almacenamiento está restringido
+                    }
+                    updateHighScoreDisplays();
+                    return true;
+                }
+                return false;
+            }
+
+            function updateHighScoreDisplays() {
+                hudHighscore.textContent = state.highScore;
+                document.getElementById('start-highscore').textContent = state.highScore;
+            }
+
+            /* ------------------------------------------------------------------------
+               5. DIMENSIONAMIENTO RESPONSIVO DEL CANVAS
+            ------------------------------------------------------------------------ */
+            function resizeCanvas() {
+                const rect = boardContainer.getBoundingClientRect();
+                const size = Math.floor(Math.min(rect.width, rect.height));
+                const dpr = window.devicePixelRatio || 1;
+
+                canvas.width = size * dpr;
+                canvas.height = size * dpr;
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+                render();
+            }
+
+            window.addEventListener('resize', resizeCanvas);
+
+            /* ------------------------------------------------------------------------
+               6. INICIALIZACIÓN DE NIVELES Y GENERACIÓN SEGURA DE ENTIDADES
+            ------------------------------------------------------------------------ */
+            function isCellOccupied(x, y, includeSnake = true) {
+                const config = LEVEL_CONFIGS[state.level];
+                // Verificar obstáculos del nivel
+                if (config.obstacles.some(obs => obs.x === x && obs.y === y)) {
+                    return true;
+                }
+                // Verificar cuerpo de la serpiente
+                if (includeSnake && state.snake.some(seg => seg.x === x && seg.y === y)) {
+                    return true;
+                }
+                // Verificar manzana normal
+                if (state.apple && state.apple.x === x && state.apple.y === y) {
+                    return true;
+                }
+                // Verificar manzana dorada
+                if (state.goldenApple && state.goldenApple.x === x && state.goldenApple.y === y) {
+                    return true;
+                }
+                return false;
+            }
+
+            function getRandomFreeCell() {
+                const freeCells = [];
+                for (let x = 0; x < GRID_SIZE; x++) {
+                    for (let y = 0; y < GRID_SIZE; y++) {
+                        if (!isCellOccupied(x, y, true)) {
+                            freeCells.push({ x, y });
+                        }
+                    }
+                }
+                if (freeCells.length === 0) return { x: 1, y: 1 };
+                return freeCells[Math.floor(Math.random() * freeCells.length)];
+            }
+
+            function setupLevel(levelNum, resetScore = false) {
+                clearLevelCountdown();
+                state.level = levelNum;
+                if (resetScore) {
+                    state.score = 0;
+                }
+                state.applesEatenInLevel = 0;
+                state.direction = { x: 1, y: 0 };
+                state.directionQueue = [];
+                state.goldenApple = null;
+                state.goldenSpawnTimer = performance.now();
+                state.particles = [];
+
+                // Posición inicial segura de la serpiente (centro-izquierda moviéndose a la derecha)
+                // La fila y=10 está garantizada libre de obstáculos en los 3 niveles
+                state.snake = [
+                    { x: 6, y: 10 },
+                    { x: 5, y: 10 },
+                    { x: 4, y: 10 }
+                ];
+
+                // Generar primera manzana en celda libre
+                state.apple = null;
+                state.apple = getRandomFreeCell();
+
+                updateHUD();
+            }
+
+            function startNewGame() {
+                audio.init();
+                audio.playClick();
+                setupLevel(1, true);
+                setGameStatus('PLAYING');
+                state.lastTickTime = performance.now();
+            }
+
+            function startNextLevel() {
+                audio.playClick();
+                clearLevelCountdown();
+                const nextLvl = state.level + 1;
+                if (nextLvl <= 3) {
+                    setupLevel(nextLvl, false);
+                    setGameStatus('PLAYING');
+                    state.lastTickTime = performance.now();
+                }
+            }
+
+            /* ------------------------------------------------------------------------
+               7. CONTROL DE PANTALLAS DE ESTADO Y HUD
+            ------------------------------------------------------------------------ */
+            function hideAllScreens() {
+                screenStart.classList.add('hidden');
+                screenPause.classList.add('hidden');
+                screenLevelUp.classList.add('hidden');
+                screenGameOver.classList.add('hidden');
+                screenVictory.classList.add('hidden');
+            }
+
+            function setGameStatus(newStatus) {
+                state.status = newStatus;
+                hideAllScreens();
+
+                const isPlayingOrPaused = (newStatus === 'PLAYING' || newStatus === 'PAUSED');
+                btnPause.disabled = !isPlayingOrPaused;
+                btnRestartHud.disabled = (newStatus === 'START');
+
+                if (newStatus === 'PAUSED') {
+                    iconPause.classList.add('hidden');
+                    iconPlay.classList.remove('hidden');
+                    screenPause.classList.remove('hidden');
+                } else {
+                    iconPause.classList.remove('hidden');
+                    iconPlay.classList.add('hidden');
+                }
+
+                if (newStatus === 'START') {
+                    screenStart.classList.remove('hidden');
+                } else if (newStatus === 'LEVEL_UP') {
+                    showLevelUpScreen();
+                } else if (newStatus === 'GAME_OVER') {
+                    screenGameOver.classList.remove('hidden');
+                } else if (newStatus === 'VICTORY') {
+                    screenVictory.classList.remove('hidden');
+                }
+            }
+
+            function updateHUD() {
+                const config = LEVEL_CONFIGS[state.level];
+                hudLevel.textContent = `${state.level}/3`;
+                hudScore.textContent = state.score;
+                hudApples.textContent = `${state.applesEatenInLevel}/${config.targetApples}`;
+                hudLevelName.textContent = config.name;
+
+                const pct = Math.min(100, Math.round((state.applesEatenInLevel / config.targetApples) * 100));
+                levelProgressBar.style.width = `${pct}%`;
+            }
+
+            function clearLevelCountdown() {
+                if (state.countdownInterval) {
+                    clearInterval(state.countdownInterval);
+                    state.countdownInterval = null;
+                }
+            }
+
+            function showLevelUpScreen() {
+                const currentCfg = LEVEL_CONFIGS[state.level];
+                const nextCfg = LEVEL_CONFIGS[state.level + 1];
+
+                document.getElementById('levelup-title').textContent = `NIVEL ${state.level} SUPERADO`;
+                document.getElementById('levelup-score').textContent = state.score;
+                document.getElementById('levelup-next-name').textContent = `Nivel ${nextCfg.number}: ${nextCfg.name}`;
+                document.getElementById('levelup-tip').textContent = currentCfg.tip;
+
+                let secondsLeft = 4;
+                btnNextLevel.innerHTML = `INICIAR NIVEL ${nextCfg.number} (<span id="levelup-countdown">${secondsLeft}</span>s)`;
+                screenLevelUp.classList.remove('hidden');
+
+                clearLevelCountdown();
+                state.countdownInterval = setInterval(() => {
+                    secondsLeft--;
+                    const span = document.getElementById('levelup-countdown');
+                    if (span) span.textContent = secondsLeft;
+                    if (secondsLeft <= 0) {
+                        startNextLevel();
+                    }
+                }, 1000);
+            }
+
+            function triggerGameOver(reasonText) {
+                audio.playGameOver();
+                const isNewRecord = saveHighScore(state.score);
+
+                document.getElementById('gameover-reason').textContent = reasonText;
+                document.getElementById('gameover-level').textContent = `${state.level} / 3`;
+                document.getElementById('gameover-score').textContent = state.score;
+                document.getElementById('gameover-highscore').textContent = state.highScore;
+
+                const recordBadge = document.getElementById('gameover-new-record');
+                if (isNewRecord && state.score > 0) {
+                    recordBadge.classList.remove('hidden');
+                } else {
+                    recordBadge.classList.add('hidden');
+                }
+
+                // Efecto de explosión de partículas en la cabeza
+                const head = state.snake[0];
+                if (head) {
+                    spawnParticles(head.x, head.y, '#ff2a6d', 22);
+                }
+
+                setGameStatus('GAME_OVER');
+            }
+
+            function triggerVictory() {
+                audio.playVictory();
+                const isNewRecord = saveHighScore(state.score);
+
+                document.getElementById('victory-score').textContent = state.score;
+                document.getElementById('victory-highscore').textContent = state.highScore;
+
+                const recordBadge = document.getElementById('victory-new-record');
+                if (isNewRecord && state.score > 0) {
+                    recordBadge.classList.remove('hidden');
+                } else {
+                    recordBadge.classList.add('hidden');
+                }
+
+                // Partículas celebratorias
+                const head = state.snake[0];
+                if (head) {
+                    spawnParticles(head.x, head.y, '#ffd700', 30);
+                }
+
+                setGameStatus('VICTORY');
+            }
+
+            /* ------------------------------------------------------------------------
+               8. PARTÍCULAS VISUALES
+            ------------------------------------------------------------------------ */
+            function spawnParticles(gridX, gridY, color, count = 12) {
+                for (let i = 0; i < count; i++) {
+                    const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.5;
+                    const speed = 1.5 + Math.random() * 3.5;
+                    state.particles.push({
+                        x: gridX + 0.5,
+                        y: gridY + 0.5,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed,
+                        life: 1.0,
+                        decay: 0.025 + Math.random() * 0.02,
+                        color
+                    });
+                }
+            }
+
+            function updateParticles() {
+                for (let i = state.particles.length - 1; i >= 0; i--) {
+                    const p = state.particles[i];
+                    p.x += p.vx * 0.06;
+                    p.y += p.vy * 0.06;
+                    p.life -= p.decay;
+                    if (p.life <= 0) {
+                        state.particles.splice(i, 1);
+                    }
+                }
+            }
+
+            /* ------------------------------------------------------------------------
+               9. LÓGICA DE ACTUALIZACIÓN (TICK DEL JUEGO)
+            ------------------------------------------------------------------------ */
+            function updateGameTick(now) {
+                const config = LEVEL_CONFIGS[state.level];
+
+                // Procesar siguiente dirección de la cola para evitar giros suicidas de 180°
+                if (state.directionQueue.length > 0) {
+                    state.direction = state.directionQueue.shift();
+                }
+
+                const head = state.snake[0];
+                const newHead = {
+                    x: head.x + state.direction.x,
+                    y: head.y + state.direction.y
+                };
+
+                // 1. Verificar colisión con bordes del tablero
+                if (newHead.x < 0 || newHead.x >= GRID_SIZE || newHead.y < 0 || newHead.y >= GRID_SIZE) {
+                    triggerGameOver('¡Chocaste contra el perímetro del tablero!');
+                    return;
+                }
+
+                // 2. Verificar colisión con obstáculos internos (Niveles 2 y 3)
+                if (config.obstacles.some(obs => obs.x === newHead.x && obs.y === newHead.y)) {
+                    triggerGameOver('¡Impactaste contra una barrera de energía!');
+                    return;
+                }
+
+                // 3. Verificar colisión con el propio cuerpo (ignorando la punta de la cola si no crece)
+                const willEatNormal = (state.apple && newHead.x === state.apple.x && newHead.y === state.apple.y);
+                const willEatGolden = (state.goldenApple && newHead.x === state.goldenApple.x && newHead.y === state.goldenApple.y);
+                const bodyToCheck = (willEatNormal || willEatGolden) ? state.snake : state.snake.slice(0, -1);
+
+                if (bodyToCheck.some(seg => seg.x === newHead.x && seg.y === newHead.y)) {
+                    triggerGameOver('¡Te mordiste tu propia cola!');
+                    return;
+                }
+
+                // Mover serpiente insertando nueva cabeza
+                state.snake.unshift(newHead);
+
+                let grew = false;
+
+                // 4. Comer Manzana Normal
+                if (willEatNormal) {
+                    grew = true;
+                    state.score += config.applePoints;
+                    state.applesEatenInLevel += 1;
+                    audio.playEat();
+                    spawnParticles(newHead.x, newHead.y, '#ff2a6d', 14);
+
+                    if (state.score > state.highScore) {
+                        saveHighScore(state.score);
+                    }
+
+                    updateHUD();
+
+                    // Comprobar si completó la meta del nivel actual
+                    if (state.applesEatenInLevel >= config.targetApples) {
+                        if (state.level < 3) {
+                            audio.playLevelUp();
+                            setGameStatus('LEVEL_UP');
+                        } else {
+                            triggerVictory();
+                        }
+                        return;
+                    }
+
+                    // Generar siguiente manzana normal
+                    state.apple = null;
+                    state.apple = getRandomFreeCell();
+                }
+
+                // 5. Comer Manzana Dorada (Nivel 3)
+                if (willEatGolden) {
+                    grew = true;
+                    state.score += 50; // Bonificación especial de +50 puntos
+                    audio.playGoldenEat();
+                    spawnParticles(newHead.x, newHead.y, '#ffd700', 22);
+                    state.goldenApple = null;
+                    state.goldenSpawnTimer = now;
+
+                    if (state.score > state.highScore) {
+                        saveHighScore(state.score);
+                    }
+                    updateHUD();
+                }
+
+                // Si no comió, eliminar el último segmento de la cola
+                if (!grew) {
+                    state.snake.pop();
+                }
+
+                // 6. Gestión periódica de Manzana Dorada en el Nivel 3
+                if (config.hasGoldenApple) {
+                    if (state.goldenApple) {
+                        // Comprobar si expiró su tiempo
+                        if (now >= state.goldenApple.expiresAt) {
+                            state.goldenApple = null;
+                            state.goldenSpawnTimer = now;
+                        }
+                    } else {
+                        // Aparece cada ~6.5 segundos si no hay una activa
+                        if (now - state.goldenSpawnTimer >= 6500) {
+                            const pos = getRandomFreeCell();
+                            state.goldenApple = {
+                                x: pos.x,
+                                y: pos.y,
+                                duration: 7000, // Dura 7 segundos en el tablero
+                                expiresAt: now + 7000
+                            };
+                        }
+                    }
+                }
+            }
+
+            /* ------------------------------------------------------------------------
+               10. RENDERIZADO VISUAL RETRO-NEÓN EN CANVAS
+            ------------------------------------------------------------------------ */
+            function render(now = performance.now()) {
+                const width = canvas.width / (window.devicePixelRatio || 1);
+                const height = canvas.height / (window.devicePixelRatio || 1);
+                const cellSize = width / GRID_SIZE;
+
+                // Fondo oscuro del tablero
+                ctx.fillStyle = '#070b19';
+                ctx.fillRect(0, 0, width, height);
+
+                // Cuadrícula sutil de neón
+                ctx.strokeStyle = 'rgba(0, 243, 255, 0.055)';
+                ctx.lineWidth = 1;
+                for (let i = 1; i < GRID_SIZE; i++) {
+                    const pos = i * cellSize;
+                    ctx.beginPath();
+                    ctx.moveTo(pos, 0);
+                    ctx.lineTo(pos, height);
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.moveTo(0, pos);
+                    ctx.lineTo(width, pos);
+                    ctx.stroke();
+                }
+
+                const config = LEVEL_CONFIGS[state.level];
+
+                // Dibujar Obstáculos (Niveles 2 y 3)
+                if (config && config.obstacles.length > 0) {
+                    config.obstacles.forEach(obs => {
+                        const ox = obs.x * cellSize;
+                        const oy = obs.y * cellSize;
+                        const pad = cellSize * 0.08;
+                        const size = cellSize - pad * 2;
+
+                        ctx.save();
+                        ctx.shadowColor = '#b026ff';
+                        ctx.shadowBlur = 10;
+                        ctx.fillStyle = 'rgba(176, 38, 255, 0.28)';
+                        ctx.strokeStyle = '#d580ff';
+                        ctx.lineWidth = 1.8;
+
+                        roundRect(ctx, ox + pad, oy + pad, size, size, 4);
+                        ctx.fill();
+                        ctx.stroke();
+
+                        // Detalle interior estilo bloque energético
+                        ctx.beginPath();
+                        ctx.moveTo(ox + pad + 3, oy + pad + 3);
+                        ctx.lineTo(ox + pad + size - 3, oy + pad + size - 3);
+                        ctx.strokeStyle = 'rgba(213, 128, 255, 0.45)';
+                        ctx.lineWidth = 1;
+                        ctx.stroke();
+                        ctx.restore();
+                    });
+                }
+
+                // Dibujar Manzana Normal (Pulso Neón Rosa/Rojo)
+                if (state.apple) {
+                    const pulse = 1 + Math.sin(now * 0.008) * 0.08;
+                    const cx = (state.apple.x + 0.5) * cellSize;
+                    const cy = (state.apple.y + 0.5) * cellSize;
+                    const radius = (cellSize * 0.36) * pulse;
+
+                    ctx.save();
+                    ctx.shadowColor = '#ff2a6d';
+                    ctx.shadowBlur = 14;
+                    ctx.fillStyle = '#ff2a6d';
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Brillo especular
+                    ctx.fillStyle = '#ff9ebb';
+                    ctx.beginPath();
+                    ctx.arc(cx - radius * 0.3, cy - radius * 0.3, radius * 0.25, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Hojita verde neón
+                    ctx.fillStyle = '#00ff88';
+                    ctx.beginPath();
+                    ctx.ellipse(cx + 2, cy - radius * 0.95, radius * 0.32, radius * 0.16, -0.4, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                }
+
+                // Dibujar Manzana Dorada Especial (Nivel 3)
+                if (state.goldenApple) {
+                    const remaining = Math.max(0, state.goldenApple.expiresAt - now);
+                    const ratio = remaining / state.goldenApple.duration;
+                    // Parpadea cuando queda menos del 30% de tiempo
+                    const blink = ratio < 0.3 ? (Math.sin(now * 0.03) > 0 ? 1 : 0.35) : 1;
+                    const pulse = 1 + Math.sin(now * 0.012) * 0.12;
+                    const cx = (state.goldenApple.x + 0.5) * cellSize;
+                    const cy = (state.goldenApple.y + 0.5) * cellSize;
+                    const radius = (cellSize * 0.40) * pulse;
+
+                    ctx.save();
+                    ctx.globalAlpha = blink;
+                    ctx.shadowColor = '#ffd700';
+                    ctx.shadowBlur = 18;
+                    ctx.fillStyle = '#ffd700';
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Estrella interior blanca
+                    ctx.fillStyle = '#fff9d6';
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, radius * 0.42, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Arco indicador de tiempo restante alrededor de la manzana dorada
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, radius + 3, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * ratio);
+                    ctx.stroke();
+                    ctx.restore();
+                }
+
+                // Dibujar Serpiente (Verde Neón con cabeza y ojos direccionales)
+                state.snake.forEach((seg, index) => {
+                    const isHead = index === 0;
+                    const pad = isHead ? cellSize * 0.05 : cellSize * 0.09;
+                    const sx = seg.x * cellSize + pad;
+                    const sy = seg.y * cellSize + pad;
+                    const size = cellSize - pad * 2;
+
+                    ctx.save();
+                    if (isHead) {
+                        ctx.shadowColor = '#00ff88';
+                        ctx.shadowBlur = 14;
+                        ctx.fillStyle = '#39ff9c';
+                    } else {
+                        // Degradado sutil hacia la cola
+                        const fade = Math.max(0.45, 1 - (index / (state.snake.length + 4)) * 0.55);
+                        ctx.shadowColor = 'rgba(0, 255, 136, 0.4)';
+                        ctx.shadowBlur = 6;
+                        ctx.fillStyle = `rgba(0, 230, 122, ${fade})`;
+                    }
+
+                    roundRect(ctx, sx, sy, size, size, isHead ? 6 : 4);
+                    ctx.fill();
+
+                    // Dibujar ojos en la cabeza orientados hacia la dirección actual
+                    if (isHead) {
+                        ctx.shadowBlur = 0;
+                        ctx.fillStyle = '#050814';
+                        const eyeR = Math.max(1.8, cellSize * 0.085);
+                        const centerX = seg.x * cellSize + cellSize / 2;
+                        const centerY = seg.y * cellSize + cellSize / 2;
+                        const offsetFwd = cellSize * 0.18;
+                        const offsetSide = cellSize * 0.18;
+
+                        let eye1 = { x: centerX, y: centerY };
+                        let eye2 = { x: centerX, y: centerY };
+
+                        if (state.direction.x === 1) {
+                            eye1 = { x: centerX + offsetFwd, y: centerY - offsetSide };
+                            eye2 = { x: centerX + offsetFwd, y: centerY + offsetSide };
+                        } else if (state.direction.x === -1) {
+                            eye1 = { x: centerX - offsetFwd, y: centerY - offsetSide };
+                            eye2 = { x: centerX - offsetFwd, y: centerY + offsetSide };
+                        } else if (state.direction.y === -1) {
+                            eye1 = { x: centerX - offsetSide, y: centerY - offsetFwd };
+                            eye2 = { x: centerX + offsetSide, y: centerY - offsetFwd };
+                        } else if (state.direction.y === 1) {
+                            eye1 = { x: centerX - offsetSide, y: centerY + offsetFwd };
+                            eye2 = { x: centerX + offsetSide, y: centerY + offsetFwd };
+                        }
+
+                        ctx.beginPath();
+                        ctx.arc(eye1.x, eye1.y, eyeR, 0, Math.PI * 2);
+                        ctx.arc(eye2.x, eye2.y, eyeR, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                    ctx.restore();
+                });
+
+                // Dibujar Partículas
+                state.particles.forEach(p => {
+                    ctx.save();
+                    ctx.globalAlpha = Math.max(0, p.life);
+                    ctx.fillStyle = p.color;
+                    ctx.shadowColor = p.color;
+                    ctx.shadowBlur = 8;
+                    ctx.beginPath();
+                    ctx.arc(p.x * cellSize, p.y * cellSize, Math.max(2, cellSize * 0.11 * p.life), 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.restore();
+                });
+            }
+
+            // Utilidad para rectángulos con esquinas redondeadas en Canvas
+            function roundRect(ctx, x, y, w, h, r) {
+                ctx.beginPath();
+                ctx.moveTo(x + r, y);
+                ctx.arcTo(x + w, y, x + w, y + h, r);
+                ctx.arcTo(x + w, y + h, x, y + h, r);
+                ctx.arcTo(x, y + h, x, y, r);
+                ctx.arcTo(x, y, x + w, y, r);
+                ctx.closePath();
+            }
+
+            /* ------------------------------------------------------------------------
+               11. BUCLE PRINCIPAL DE ANIMACIÓN (60 FPS + TICKS DE LÓGICA)
+            ------------------------------------------------------------------------ */
+            function gameLoop(now) {
+                if (state.status === 'PLAYING') {
+                    const speed = LEVEL_CONFIGS[state.level].speedMs;
+                    if (now - state.lastTickTime >= speed) {
+                        state.lastTickTime = now;
+                        updateGameTick(now);
+                    }
+                }
+
+                updateParticles();
+                render(now);
+                state.animationFrameId = requestAnimationFrame(gameLoop);
+            }
+
+            /* ------------------------------------------------------------------------
+               12. MANEJO DE ENTRADAS (TECLADO, BOTONES D-PAD Y GESTOS SWIPE)
+            ------------------------------------------------------------------------ */
+            function queueDirection(newDir) {
+                if (state.status !== 'PLAYING') return;
+
+                // Comparar contra la última dirección en cola o la actual
+                const lastPlanned = state.directionQueue.length > 0
+                    ? state.directionQueue[state.directionQueue.length - 1]
+                    : state.direction;
+
+                // Evitar dirección opuesta (180°) o duplicada
+                if ((newDir.x + lastPlanned.x === 0 && newDir.y + lastPlanned.y === 0) ||
+                    (newDir.x === lastPlanned.x && newDir.y === lastPlanned.y)) {
+                    return;
+                }
+
+                // Limitar cola a máximo 2 movimientos anticipados para respuesta precisa
+                if (state.directionQueue.length < 2) {
+                    state.directionQueue.push(newDir);
+                }
+            }
+
+            function handleDirectionInput(dirName) {
+                audio.init();
+                switch (dirName) {
+                    case 'UP':    queueDirection({ x: 0, y: -1 }); break;
+                    case 'DOWN':  queueDirection({ x: 0, y: 1 });  break;
+                    case 'LEFT':  queueDirection({ x: -1, y: 0 }); break;
+                    case 'RIGHT': queueDirection({ x: 1, y: 0 });  break;
+                }
+            }
+
+            // Eventos de Teclado (Flechas, WASD, Pausa)
+            window.addEventListener('keydown', (e) => {
+                const key = e.key.toLowerCase();
+
+                if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' '].includes(key)) {
+                    e.preventDefault();
+                }
+
+                if (key === 'arrowup' || key === 'w') {
+                    highlightDpad('dpad-up');
+                    handleDirectionInput('UP');
+                } else if (key === 'arrowdown' || key === 's') {
+                    highlightDpad('dpad-down');
+                    handleDirectionInput('DOWN');
+                } else if (key === 'arrowleft' || key === 'a') {
+                    highlightDpad('dpad-left');
+                    handleDirectionInput('LEFT');
+                } else if (key === 'arrowright' || key === 'd') {
+                    highlightDpad('dpad-right');
+                    handleDirectionInput('RIGHT');
+                } else if (key === 'p' || key === 'escape' || key === ' ') {
+                    if (state.status === 'PLAYING') {
+                        togglePause();
+                    } else if (state.status === 'PAUSED') {
+                        togglePause();
+                    }
+                }
+            });
+
+            function highlightDpad(id) {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.classList.add('pressed');
+                setTimeout(() => el.classList.remove('pressed'), 120);
+            }
+
+            // Eventos para botones táctiles D-Pad (soporte inmediato pointerdown + click)
+            document.querySelectorAll('.dpad-btn').forEach(btn => {
+                const dir = btn.getAttribute('data-dir');
+                btn.addEventListener('pointerdown', (e) => {
+                    e.preventDefault();
+                    handleDirectionInput(dir);
+                });
+            });
+
+            // Soporte de gestos táctiles (Swipe) directamente sobre el Canvas
+            let touchStartX = 0;
+            let touchStartY = 0;
+
+            canvas.addEventListener('touchstart', (e) => {
+                if (e.touches.length > 0) {
+                    touchStartX = e.touches[0].clientX;
+                    touchStartY = e.touches[0].clientY;
+                }
+            }, { passive: true });
+
+            canvas.addEventListener('touchend', (e) => {
+                if (e.changedTouches.length === 0) return;
+                const dx = e.changedTouches[0].clientX - touchStartX;
+                const dy = e.changedTouches[0].clientY - touchStartY;
+                const minSwipe = 22;
+
+                if (Math.abs(dx) < minSwipe && Math.abs(dy) < minSwipe) return;
+
+                if (Math.abs(dx) > Math.abs(dy)) {
+                    handleDirectionInput(dx > 0 ? 'RIGHT' : 'LEFT');
+                } else {
+                    handleDirectionInput(dy > 0 ? 'DOWN' : 'UP');
+                }
+            }, { passive: true });
+
+            /* ------------------------------------------------------------------------
+               13. EVENTOS DE BOTONES DE INTERFAZ
+            ------------------------------------------------------------------------ */
+            function togglePause() {
+                audio.playClick();
+                if (state.status === 'PLAYING') {
+                    setGameStatus('PAUSED');
+                } else if (state.status === 'PAUSED') {
+                    setGameStatus('PLAYING');
+                    state.lastTickTime = performance.now();
+                }
+            }
+
+            btnSound.addEventListener('click', () => {
+                const isMuted = audio.toggleMute();
+                if (isMuted) {
+                    iconSoundOn.classList.add('hidden');
+                    iconSoundOff.classList.remove('hidden');
+                } else {
+                    iconSoundOff.classList.add('hidden');
+                    iconSoundOn.classList.remove('hidden');
+                    audio.playClick();
+                }
+            });
+
+            btnPause.addEventListener('click', togglePause);
+            btnResume.addEventListener('click', togglePause);
+
+            btnStartGame.addEventListener('click', startNewGame);
+            btnRestartHud.addEventListener('click', startNewGame);
+            btnRestartPause.addEventListener('click', startNewGame);
+            btnRetry.addEventListener('click', startNewGame);
+            btnPlayAgain.addEventListener('click', startNewGame);
+            btnNextLevel.addEventListener('click', startNextLevel);
+
+            /* ------------------------------------------------------------------------
+               14. ARRANQUE INICIAL AL CARGAR LA PÁGINA
+            ------------------------------------------------------------------------ */
+            window.addEventListener('load', () => {
+                loadHighScore();
+                setupLevel(1, true);
+                resizeCanvas();
+                setGameStatus('START');
+                state.animationFrameId = requestAnimationFrame(gameLoop);
+            });
+        })();
+    </script>
+</body>
+</html>
